@@ -1,73 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Anthropic from '@anthropic-ai/sdk';
 
 export const runtime = 'nodejs';
-export const maxDuration = 30;
+export const maxDuration = 45;
 
-// Search Wikimedia Commons for full-length outfit photos.
-// Filter by aspect ratio: full-body red carpet photos are portrait (height > width).
-async function searchWikimedia(query: string): Promise<string | null> {
-  const url = new URL('https://commons.wikimedia.org/w/api.php');
-  url.searchParams.set('action', 'query');
-  url.searchParams.set('format', 'json');
-  url.searchParams.set('generator', 'search');
-  url.searchParams.set('gsrsearch', query);
-  url.searchParams.set('gsrlimit', '15');
-  url.searchParams.set('gsrnamespace', '6');
-  url.searchParams.set('prop', 'imageinfo');
-  url.searchParams.set('iiprop', 'url|mime|size');
-  url.searchParams.set('iiurlwidth', '800');
-  url.searchParams.set('origin', '*');
+// Use Claude with web search to find a real, full-length Met Gala photo URL.
+// This is far more reliable than Wikimedia which lacks paparazzi/red carpet archives.
+async function findMetGalaImage(
+  celebrity: string,
+  year: string,
+  apiKey: string,
+): Promise<{ imageUrl: string | null; caption: string }> {
+  const client = new Anthropic({ apiKey });
 
-  const res = await fetch(url.toString(), {
-    headers: {
-      'User-Agent': 'MetGalaAI/1.0 (educational; contact via github)',
-    },
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-5',
+    max_tokens: 500,
+    tools: [
+      {
+        type: 'web_search_20250305',
+        name: 'web_search',
+        max_uses: 3,
+      } as any,
+    ],
+    system: `You are a research assistant finding direct image URLs. 
+You MUST search the web and return ONLY a JSON object — no prose, no markdown.
+Schema: { "imageUrl": "https://...", "caption": "..." }
+If no full-length image is found, return: { "imageUrl": null, "caption": "..." }`,
+    messages: [
+      {
+        role: 'user',
+        content: `Find a direct, publicly accessible full-length photo URL of ${celebrity} at the Met Gala ${year} showing their complete outfit from head to toe.
+
+Search for: "${celebrity} Met Gala ${year} full length outfit"
+
+Requirements:
+- Must be a direct image URL ending in .jpg, .jpeg, or .png
+- Must show the FULL outfit — head to toe, no cropping
+- Prefer sources like vogue.com, harpersbazaar.com, popsugar.com, gettyimages.com, people.com
+- The URL must be a direct image link, not a webpage
+
+Return ONLY JSON: { "imageUrl": "https://...", "caption": "${celebrity}, Met Gala ${year}" }
+If you cannot find a suitable full-length image URL, return: { "imageUrl": null, "caption": "${celebrity}, Met Gala ${year}" }`,
+      },
+    ],
   });
 
-  if (!res.ok) return null;
-  const data = await res.json();
-  const pages = data?.query?.pages;
-  if (!pages) return null;
-
-  type Candidate = {
-    url: string;
-    ratio: number;
-    area: number;
-  };
-
-  const candidates: Candidate[] = [];
-
-  for (const key of Object.keys(pages)) {
-    const page = pages[key];
-    const info = page?.imageinfo?.[0];
-    if (!info) continue;
-
-    const mime: string = info.mime || '';
-    if (!mime.startsWith('image/')) continue;
-    if (mime.includes('svg')) continue;
-
-    const origWidth = info.width || 0;
-    const origHeight = info.height || 0;
-    if (origWidth < 400 || origHeight < 400) continue;
-
-    const ratio = origHeight / origWidth;
-    const imageUrl = info.thumburl || info.url;
-
-    candidates.push({ url: imageUrl, ratio, area: origWidth * origHeight });
+  // Extract the final text block
+  let finalText = '';
+  for (const block of response.content) {
+    if (block.type === 'text') finalText = block.text;
   }
 
-  if (candidates.length === 0) return null;
-
-  // Strongly prefer portrait images (ratio > 1.2 = likely full body)
-  candidates.sort((a, b) => {
-    const aPortrait = a.ratio > 1.2 ? 1 : 0;
-    const bPortrait = b.ratio > 1.2 ? 1 : 0;
-    if (aPortrait !== bPortrait) return bPortrait - aPortrait;
-    if (aPortrait && bPortrait) return b.ratio - a.ratio;
-    return b.area - a.area;
-  });
-
-  return candidates[0].url;
+  try {
+    const match = finalText.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON found');
+    const parsed = JSON.parse(match[0]);
+    return {
+      imageUrl: parsed.imageUrl || null,
+      caption: parsed.caption || `${celebrity}, Met Gala ${year}`,
+    };
+  } catch {
+    return { imageUrl: null, caption: `${celebrity}, Met Gala ${year}` };
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -77,36 +72,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Celebrity required' }, { status: 400 });
     }
 
-    // Queries optimized for full-length red carpet shots
-    const queries = [
-      `${celebrity} Met Gala ${year} red carpet full length`,
-      `${celebrity} Met Gala ${year} gown`,
-      `${celebrity} Met Gala ${year}`,
-      `${celebrity} Met Gala red carpet`,
-      `${celebrity} Met Gala`,
-      `${celebrity} red carpet gown`,
-      `${celebrity} red carpet`,
-    ];
-
-    for (const q of queries) {
-      const imageUrl = await searchWikimedia(q);
-      if (imageUrl) {
-        return NextResponse.json({
-          imageUrl,
-          caption: `${celebrity}, Met Gala ${year} · Image via Wikimedia Commons`,
-        });
-      }
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ imageUrl: null, caption: `${celebrity}, Met Gala ${year}` });
     }
 
-    return NextResponse.json({
-      imageUrl: null,
-      caption: `${celebrity}, Met Gala ${year}`,
-    });
+    const result = await findMetGalaImage(celebrity, year, apiKey);
+    return NextResponse.json(result);
   } catch (err: any) {
     console.error('Archive error:', err);
-    return NextResponse.json(
-      { error: err?.message || 'Archive lookup failed' },
-      { status: 500 },
-    );
+    return NextResponse.json({ imageUrl: null, caption: 'Image unavailable' });
   }
 }
