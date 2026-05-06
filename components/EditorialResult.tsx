@@ -10,6 +10,7 @@ type Props = {
   imageUrl: string | null;
   imageCaption: string | null;
   onReset: () => void;
+  onRetry: () => void;
 };
 
 export default function EditorialResult({
@@ -19,6 +20,7 @@ export default function EditorialResult({
   imageUrl,
   imageCaption,
   onReset,
+  onRetry,
 }: Props) {
   const [copied, setCopied] = useState(false);
 
@@ -270,12 +272,20 @@ export default function EditorialResult({
         className="px-6 md:px-12 max-w-4xl mx-auto mt-20 text-center reveal"
         style={{ animationDelay: '1.25s' }}
       >
-        <button
-          onClick={onReset}
-          className="btn-editorial border border-ink px-8 md:px-10 py-4 font-mono text-xs md:text-sm uppercase tracking-widest"
-        >
-          Analyze Another →
-        </button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button
+            onClick={onRetry}
+            className="btn-editorial border border-oxblood text-oxblood px-8 md:px-10 py-4 font-mono text-xs md:text-sm uppercase tracking-widest"
+          >
+            Try Again ↻
+          </button>
+          <button
+            onClick={onReset}
+            className="btn-editorial border border-ink px-8 md:px-10 py-4 font-mono text-xs md:text-sm uppercase tracking-widest"
+          >
+            New Company →
+          </button>
+        </div>
         <p className="mt-10 font-mono text-[10px] uppercase tracking-widest text-ink/50">
           Met Gala AI · Built by Yamini · Powered by Claude
         </p>

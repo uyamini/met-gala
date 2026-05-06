@@ -44,19 +44,29 @@ export type AppState =
 
 export default function Page() {
   const [state, setState] = useState<AppState>({ phase: 'landing' });
+  const [runKey, setRunKey] = useState(0);
+
+  const handleRetry = () => {
+    if (state.phase === 'result') {
+      setRunKey((k) => k + 1);
+      setState({ phase: 'analyzing', company: state.company, mode: state.mode });
+    }
+  };
 
   return (
     <main className="relative z-10">
       {state.phase === 'landing' && (
         <LandingHero
-          onSubmit={(company, mode) =>
-            setState({ phase: 'analyzing', company, mode })
-          }
+          onSubmit={(company, mode) => {
+            setRunKey((k) => k + 1);
+            setState({ phase: 'analyzing', company, mode });
+          }}
         />
       )}
 
       {state.phase === 'analyzing' && (
         <AnalysisStream
+          key={runKey}
           company={state.company}
           mode={state.mode}
           onComplete={(analysis, imageUrl, imageCaption) =>
@@ -81,6 +91,7 @@ export default function Page() {
           imageUrl={state.imageUrl}
           imageCaption={state.imageCaption}
           onReset={() => setState({ phase: 'landing' })}
+          onRetry={handleRetry}
         />
       )}
     </main>

@@ -3,25 +3,24 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 export const maxDuration = 30;
 
-// Wikimedia Commons free image search.
-// We search for the celebrity + "Met Gala" and return the first usable photo.
+// Search Wikimedia Commons for full-length outfit photos.
+// Filter by aspect ratio: full-body red carpet photos are portrait (height > width).
 async function searchWikimedia(query: string): Promise<string | null> {
   const url = new URL('https://commons.wikimedia.org/w/api.php');
   url.searchParams.set('action', 'query');
   url.searchParams.set('format', 'json');
   url.searchParams.set('generator', 'search');
   url.searchParams.set('gsrsearch', query);
-  url.searchParams.set('gsrlimit', '8');
-  url.searchParams.set('gsrnamespace', '6'); // file namespace
+  url.searchParams.set('gsrlimit', '15');
+  url.searchParams.set('gsrnamespace', '6');
   url.searchParams.set('prop', 'imageinfo');
   url.searchParams.set('iiprop', 'url|mime|size');
-  url.searchParams.set('iiurlwidth', '900');
+  url.searchParams.set('iiurlwidth', '800');
   url.searchParams.set('origin', '*');
 
   const res = await fetch(url.toString(), {
     headers: {
-      // Wikimedia requires a descriptive UA
-      'User-Agent': 'TheAlgorithmWorePrada/1.0 (educational; contact via github)',
+      'User-Agent': 'MetGalaAI/1.0 (educational; contact via github)',
     },
   });
 
@@ -30,21 +29,45 @@ async function searchWikimedia(query: string): Promise<string | null> {
   const pages = data?.query?.pages;
   if (!pages) return null;
 
-  // Pick the first image that's a real photo (jpg/png) and decently sized
+  type Candidate = {
+    url: string;
+    ratio: number;
+    area: number;
+  };
+
+  const candidates: Candidate[] = [];
+
   for (const key of Object.keys(pages)) {
     const page = pages[key];
     const info = page?.imageinfo?.[0];
     if (!info) continue;
+
     const mime: string = info.mime || '';
     if (!mime.startsWith('image/')) continue;
     if (mime.includes('svg')) continue;
-    const width = info.thumbwidth || info.width || 0;
-    if (width < 400) continue;
-    // Prefer the thumbnail (smaller payload) or fall back to original
-    return info.thumburl || info.url;
+
+    const origWidth = info.width || 0;
+    const origHeight = info.height || 0;
+    if (origWidth < 400 || origHeight < 400) continue;
+
+    const ratio = origHeight / origWidth;
+    const imageUrl = info.thumburl || info.url;
+
+    candidates.push({ url: imageUrl, ratio, area: origWidth * origHeight });
   }
 
-  return null;
+  if (candidates.length === 0) return null;
+
+  // Strongly prefer portrait images (ratio > 1.2 = likely full body)
+  candidates.sort((a, b) => {
+    const aPortrait = a.ratio > 1.2 ? 1 : 0;
+    const bPortrait = b.ratio > 1.2 ? 1 : 0;
+    if (aPortrait !== bPortrait) return bPortrait - aPortrait;
+    if (aPortrait && bPortrait) return b.ratio - a.ratio;
+    return b.area - a.area;
+  });
+
+  return candidates[0].url;
 }
 
 export async function POST(req: NextRequest) {
@@ -54,12 +77,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Celebrity required' }, { status: 400 });
     }
 
-    // Try increasingly broad queries
+    // Queries optimized for full-length red carpet shots
     const queries = [
+      `${celebrity} Met Gala ${year} red carpet full length`,
+      `${celebrity} Met Gala ${year} gown`,
       `${celebrity} Met Gala ${year}`,
+      `${celebrity} Met Gala red carpet`,
       `${celebrity} Met Gala`,
-      `${celebrity} ${year}`,
-      `${celebrity}`,
+      `${celebrity} red carpet gown`,
+      `${celebrity} red carpet`,
     ];
 
     for (const q of queries) {
@@ -72,7 +98,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // No image found — that's ok, the UI handles it
     return NextResponse.json({
       imageUrl: null,
       caption: `${celebrity}, Met Gala ${year}`,
