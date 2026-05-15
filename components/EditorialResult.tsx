@@ -193,7 +193,7 @@ export default function EditorialResult({
           {/* Confidence */}
           <section>
             <div className="flex items-baseline justify-between mb-2 font-mono text-[10px] uppercase tracking-widest">
-              <span className="text-ink/60">Cultural confidence</span>
+              <span className="text-ink/60">Confidence score</span>
               <span className="text-oxblood font-display text-3xl">
                 {analysis.confidence}%
               </span>

@@ -11,7 +11,7 @@ type Props = {
 };
 
 const STAGES = [
-  { label: 'Researching cultural footprint', duration: 2200 },
+  { label: 'Researching company identity', duration: 2200 },
   { label: 'Cross-referencing recent headlines', duration: 1800 },
   { label: 'Decoding product philosophy', duration: 1600 },
   { label: 'Reading the internet', duration: 1700 },
@@ -123,7 +123,7 @@ export default function AnalysisStream({ company, mode, onComplete, onError }: P
 
           <div className="mb-10">
             <div className="flex items-baseline justify-between mb-2 font-mono text-[10px] uppercase tracking-widest">
-              <span className="text-bone/30">Cultural confidence</span>
+              <span className="text-bone/30">Confidence score</span>
               <span className="text-gold text-2xl font-display">{String(confidence).padStart(2, '0')}%</span>
             </div>
             <div className="h-px bg-bone/10 relative">

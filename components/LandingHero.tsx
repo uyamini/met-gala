@@ -22,7 +22,7 @@ export default function LandingHero({ onSubmit }: Props) {
       {/* Top masthead */}
       <header className="border-b border-ink/80 px-6 md:px-12 py-4 flex items-center justify-between text-[10px] md:text-xs font-mono uppercase tracking-widest">
         <span>Vol. 01 — Met Gala Edition</span>
-        <span className="hidden md:inline">An AI Cultural Critic</span>
+        <span className="hidden md:inline">AI Fashion Stylist</span>
         <span>Issue No. 001 / 2026</span>
       </header>
 
@@ -36,7 +36,7 @@ export default function LandingHero({ onSubmit }: Props) {
         <div className="max-w-6xl mx-auto w-full">
           {/* Eyebrow */}
           <p className="font-mono text-[11px] md:text-xs uppercase tracking-widest text-oxblood mb-6 md:mb-8 reveal" style={{ animationDelay: '0.1s' }}>
-            ⎯⎯⎯⎯ &nbsp; AI Cultural Stylist &nbsp; ⎯⎯⎯⎯
+            ⎯⎯⎯⎯ &nbsp; AI Fashion Stylist &nbsp; ⎯⎯⎯⎯
           </p>
 
           {/* Display title */}
@@ -55,8 +55,8 @@ export default function LandingHero({ onSubmit }: Props) {
               className="md:col-span-7 text-lg md:text-2xl font-body leading-snug reveal"
               style={{ animationDelay: '0.35s' }}
             >
-              An AI cultural critic that studies a company&rsquo;s philosophy, product
-              language, and current reputation — then designs the look it would
+              An AI stylist that studies a company&rsquo;s philosophy, product
+              language, and reputation — then designs the look it would
               wear to the Met Gala.
             </p>
             <div
