@@ -122,6 +122,27 @@ Then return the JSON object only.`;
     // Attach the company name back
     parsed.company = company;
 
+    // Defensive defaults so the UI never gets undefined fields
+    parsed.theme = parsed.theme || 'An unforgettable entrance';
+    parsed.internal_view = parsed.internal_view || 'A visionary force for good';
+    parsed.internet_view = parsed.internet_view || 'Complicated.';
+    parsed.archetype = parsed.archetype || 'The protagonist';
+    parsed.materials = Array.isArray(parsed.materials) ? parsed.materials : ['Unknown fabric'];
+    parsed.silhouette = parsed.silhouette || 'A commanding silhouette.';
+    parsed.accessories = parsed.accessories || 'Minimal';
+    parsed.makeup = parsed.makeup || 'Understated';
+    parsed.runway_concept = parsed.runway_concept || 'They arrive. The room notices.';
+    parsed.critic_review = parsed.critic_review || 'The look speaks for itself.';
+    parsed.confidence = typeof parsed.confidence === 'number' ? parsed.confidence : 88;
+    parsed.recent_news_influence = parsed.recent_news_influence || 'Current events inform the silhouette.';
+    parsed.image_prompt = parsed.image_prompt || `Editorial fashion photography, dramatic couture look, single model, Vogue magazine aesthetic`;
+    parsed.celebrity_match = parsed.celebrity_match || {
+      celebrity: 'Rihanna',
+      year: '2015',
+      designer: 'Guo Pei',
+      why_it_matches: 'Both command a room through sheer scale of ambition.',
+    };
+
     return NextResponse.json(parsed);
   } catch (err: any) {
     console.error('Analyze error:', err);
