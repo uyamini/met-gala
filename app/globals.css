@@ -16,26 +16,27 @@
 }
 
 html, body {
-  background: #0A0908;
-  color: #E8E0D2;
+  background: #F2EDE4;
+  color: #0D0B0A;
   font-family: var(--font-body);
 }
 
-/* Grain texture */
+/* Subtle grain texture overlay */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  opacity: 0.06;
+  opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/* Typing cursor */
 .cursor-blink::after {
   content: '▊';
   animation: blink 1s steps(2) infinite;
-  color: #C9A84C;
+  color: #5C0A18;
   margin-left: 2px;
 }
 
@@ -43,6 +44,7 @@ body::before {
   50% { opacity: 0; }
 }
 
+/* Scan line for analysis mode */
 @keyframes scan {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100vh); }
@@ -52,6 +54,7 @@ body::before {
   animation: scan 3s linear infinite;
 }
 
+/* Confidence bar fill */
 @keyframes fillBar {
   from { width: 0%; }
 }
@@ -60,6 +63,7 @@ body::before {
   animation: fillBar 1.8s ease-out;
 }
 
+/* Stagger reveal */
 @keyframes reveal {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -69,21 +73,25 @@ body::before {
   animation: reveal 0.8s ease-out backwards;
 }
 
+/* Hairline divider */
 .hairline {
-  border-color: rgba(232, 224, 210, 0.15);
+  border-color: #0D0B0A;
   border-width: 0.5px;
 }
 
+/* Editorial number styling */
 .plate-num {
   font-feature-settings: 'lnum';
   letter-spacing: 0.15em;
 }
 
+/* Selection */
 ::selection {
-  background: #C9A84C;
-  color: #0A0908;
+  background: #5C0A18;
+  color: #F2EDE4;
 }
 
+/* Custom button hover */
 .btn-editorial {
   position: relative;
   overflow: hidden;
@@ -94,7 +102,7 @@ body::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: #C9A84C;
+  background: #5C0A18;
   transform: translateY(100%);
   transition: transform 0.3s ease;
   z-index: -1;
@@ -105,10 +113,11 @@ body::before {
 }
 
 .btn-editorial:hover {
-  color: #0A0908;
-  border-color: #C9A84C;
+  color: #F2EDE4;
+  border-color: #5C0A18;
 }
 
+/* Loading dot pulse */
 @keyframes pulse-dot {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 1; }

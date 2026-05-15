@@ -65,7 +65,10 @@ export default function AnalysisStream({ company, mode, onComplete, onError }: P
           const archiveRes = await fetch('/api/archive', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ celebrity: analysis.celebrity_match.celebrity, year: analysis.celebrity_match.year }),
+            body: JSON.stringify({
+              celebrity: analysis.celebrity_match?.celebrity ?? 'Rihanna',
+              year: analysis.celebrity_match?.year ?? '2015',
+            }),
           });
           if (archiveRes.ok) {
             const data = await archiveRes.json();
