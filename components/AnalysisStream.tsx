@@ -6,7 +6,7 @@ import type { CompanyAnalysis, Mode } from '@/app/page';
 type Props = {
   company: string;
   mode: Mode;
-  onComplete: (analysis: CompanyAnalysis, imageUrl: string | null, imageCaption: string | null) => void;
+  onComplete: (analysis: CompanyAnalysis, imageUrl: string | null, imageCaption: string | null, googleImagesUrl: string | null) => void;
   onError: () => void;
 };
 
@@ -60,6 +60,7 @@ export default function AnalysisStream({ company, mode, onComplete, onError }: P
 
         let imageUrl: string | null = null;
         let imageCaption: string | null = null;
+        let googleImagesUrl: string | null = null;
 
         if (mode === 'archive') {
           const archiveRes = await fetch('/api/archive', {
@@ -68,12 +69,26 @@ export default function AnalysisStream({ company, mode, onComplete, onError }: P
             body: JSON.stringify({
               celebrity: analysis.celebrity_match?.celebrity ?? 'Rihanna',
               year: analysis.celebrity_match?.year ?? '2015',
+              designer: analysis.celebrity_match?.designer ?? '',
+              image_prompt: analysis.image_prompt ?? '',
             }),
           });
           if (archiveRes.ok) {
             const data = await archiveRes.json();
-            imageUrl = data.imageUrl ?? null;
             imageCaption = data.caption ?? null;
+            googleImagesUrl = data.googleImagesUrl ?? null;
+            // Generate an image styled after the reference look
+            if (data.styledPrompt) {
+              const genRes = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: data.styledPrompt }),
+              });
+              if (genRes.ok) {
+                const genData = await genRes.json();
+                imageUrl = genData.imageUrl ?? null;
+              }
+            }
           }
         } else {
           const genRes = await fetch('/api/generate', {
@@ -94,7 +109,7 @@ export default function AnalysisStream({ company, mode, onComplete, onError }: P
           await new Promise((r) => setTimeout(r, minDuration - elapsed));
         }
 
-        onComplete(analysis, imageUrl, imageCaption);
+        onComplete(analysis, imageUrl, imageCaption, googleImagesUrl);
       } catch (err: any) {
         setErrorMsg(err?.message || 'Something went wrong');
         setTimeout(onError, 3500);

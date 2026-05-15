@@ -40,6 +40,7 @@ export type AppState =
       analysis: CompanyAnalysis;
       imageUrl: string | null;
       imageCaption: string | null;
+      googleImagesUrl: string | null;
     };
 
 export default function Page() {
@@ -69,7 +70,7 @@ export default function Page() {
           key={runKey}
           company={state.company}
           mode={state.mode}
-          onComplete={(analysis, imageUrl, imageCaption) =>
+          onComplete={(analysis, imageUrl, imageCaption, googleImagesUrl) =>
             setState({
               phase: 'result',
               company: state.company,
@@ -77,6 +78,7 @@ export default function Page() {
               analysis,
               imageUrl,
               imageCaption,
+              googleImagesUrl,
             })
           }
           onError={() => setState({ phase: 'landing' })}
@@ -90,6 +92,7 @@ export default function Page() {
           analysis={state.analysis}
           imageUrl={state.imageUrl}
           imageCaption={state.imageCaption}
+          googleImagesUrl={state.googleImagesUrl}
           onReset={() => setState({ phase: 'landing' })}
           onRetry={handleRetry}
         />

@@ -9,6 +9,7 @@ type Props = {
   analysis: CompanyAnalysis;
   imageUrl: string | null;
   imageCaption: string | null;
+  googleImagesUrl: string | null;
   onReset: () => void;
   onRetry: () => void;
 };
@@ -19,6 +20,7 @@ export default function EditorialResult({
   analysis,
   imageUrl,
   imageCaption,
+  googleImagesUrl,
   onReset,
   onRetry,
 }: Props) {
@@ -104,8 +106,18 @@ export default function EditorialResult({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center font-mono text-xs text-ink/40 uppercase tracking-widest p-8 text-center">
-                Image unavailable.<br />The text speaks for itself.
+              <div className="w-full h-full flex flex-col items-center justify-center font-mono text-xs text-ink/40 uppercase tracking-widest p-8 text-center gap-5">
+                <span>Image generation unavailable</span>
+                {googleImagesUrl && (
+                  <a
+                    href={googleImagesUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border border-ink/20 px-4 py-2 hover:border-ink/60 hover:text-ink/70 transition-colors normal-case tracking-normal text-[11px]"
+                  >
+                    View the reference look →
+                  </a>
+                )}
               </div>
             )}
             {/* Plate marker */}
